@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "expense-tracker-373318",
+  "private_key_id": "91b49f9a120a31785577730b6fb8eb630ff79abe",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCrUcSa2m1iFbCW\n5xu8GSwjtFy1iFF6ODdW7JHuha08J18cnlHEfU1LoEsUxtzZ/alCT0Kij1I+D2P1\nX3pfTvSFYiiZwSSm6AmnmkN/6FavZralARt+3MWNFZNTK7R93RU6IVQ0NwXOiObZ\nDJpKIUNtcvP6IHTKEBt6cOH6yzNdsdjBSnrmjfqWCT0PwId0Ir6deVMSBImPdu2q\n5bRdLkOLRAp6R3+xURHSYZx4o3kCCbsXh9RjjldVkQOF4gXkVGYvVLcemaMyTpRP\nBgVcVRm44CSiH3O+mMT35cCby9RqSynS164Y0XWMU26N6yRGyA+3sebgYgmnCOvL\nihiFYXBhAgMBAAECggEAEDbrO3fIagPhBItHl/gu8gsoSiMmiQGIlVDLKA7dXEfi\nq9/9H7J3ThzT9lmy/evQ6P588UtMzqRgwtDAUYR0xqoJazH5UNW90i/ayyCXkb7Q\nMxJFgq6NAQMlgDXu/Yme8HNGl7GMemWBKdJUSQdYbSO33TjUrOo025QTA0xXpnqe\niPzGJ8NeIhPZAw1+GVbW7mn9Iei10GF7a+oH4a4Jf5Pi+IqtO2VuVxm5qkb9AHxv\n7aACQwqgrEYJQf/MImWAWteSZlUwB0l6TLPG8aNJpCcSLmHGnZk8n/elvnuWrykt\nHTKhJwFCJqLPBcvv5uZU1Ci/xJ0hfuP16Ief2xD+kQKBgQDpK+ENCUVRPtDlTvBl\n3l4cVV/kHYcpMNBg8Lc45t05aJEILJHLZKe7JOg4rGgDVq1yX5u95leC306b4dDD\ntUM62R7SBuUPXRZsiLCyUY718rWNEsSx704SBBUWItkKBu1/WIzEgdLtxfPxnwte\n6GVBAO9m1/MVKzYQw1nD7rTzOQKBgQC8F6dPhyXvdCxW2WvYILZ/VZvhzHO67/pP\nIhCxOx1+aiqfpVBZfNmjQa3lw2TK2HaGuiIDsAjv2ZpSwXtVGVzaDtgK7B5XvevJ\nynpcKAle424G7JRXihr4Exkus98BCupXL4dUn40ziGJUSUBMSyyuHAHTISYywICJ\nWuWE8PEeaQKBgQDZCVjf04NMDpZO+11U1Njwsp8hLEMFGkS8FxPUyT+eEjD9VM8Y\nbUabMc1eA0yF3wZvcYL8Dg3i6Yy4GEdEA9LiUfsYMAbCeDlJKSqfsL7LO/G1sISZ\nw0/+AQLHqgQwCybB5GCTAOyfGiTpAMuKufKVwRMVvWisiZ43mD5T3DteMQKBgDtI\neUNnpV1DkHYPMR59sQeRRAB3IELbQFmQsxIpP7KIY8bNo/WQlEgQe27flvUYJMNy\nByaCZU6zlyBeOzEnPUy9QPqwUR/2jEqdttM1Cz8ND7C/AEJXFQj7fARsTO1XM2Un\nZdAWObr0UYmfTNS/HOYDjc+tswxsABdKvuyXxGeBAoGBAKvraPgAyInajyyWvN2z\npKRZ/zdSTZBOKfnhGABR6JW6aiZw2rRm2CB6i51W+Zrygm0ON7pI26eYqvZvhcnS\nWqD5R/r6Xnty9/omtty9nuekf78HVzcArBSeAizw8MhS5ZqKKMK63aIDw7qK05ND\nRVgpl7D5kD/gp9lSGN1GiJTB\n-----END PRIVATE KEY-----\n",
+  "client_email": "droia-500@expense-tracker-373318.iam.gserviceaccount.com",
+  "client_id": "101052474745188981639",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/droia-500%40expense-tracker-373318.iam.gserviceaccount.com"
+}
