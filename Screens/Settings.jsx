@@ -1,12 +1,15 @@
-import { View, Text } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import React from "react";
+import { dropTable } from "../DBQueries";
 
 const Settings = () => {
   return (
     <View
       style={{ justifyContent: "center", alignItems: "center", height: "100%" }}
     >
-      <Text>Features Coming soon...</Text>
+      <TouchableOpacity onPress={() => dropTable()}>
+        <Text>Clear all Data</Text>
+      </TouchableOpacity>
     </View>
   );
 };

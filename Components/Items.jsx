@@ -9,12 +9,13 @@ import React, { useState, useEffect } from "react";
 import moment from "moment";
 import { Ionicons, AntDesign } from "@expo/vector-icons";
 import { FlashList } from "@shopify/flash-list";
+import { deleteItem, getItems } from "../DBQueries";
 
 function createSectionList(items) {
   const sections = {};
 
   items?.forEach((item) => {
-    const key = moment(item.dateNow).format("dddd, do MMM YYYY");
+    const key = moment(item.dateNow).format("dddd, Do MMM YYYY");
     if (!sections[key]) {
       sections[key] = [];
     }
@@ -27,25 +28,13 @@ function createSectionList(items) {
   }));
 }
 
-function Items({ db, done: doneHeading, forceUpdate }) {
-  const [items, setItems] = useState(null);
+function Items({ db, done: doneHeading, forceUpdate, navigation }) {
+  let items = getItems();
   const [SectionedItems, setSectionedItems] = useState(null);
   useEffect(() => {
     let sections = createSectionList(items);
     setSectionedItems(sections);
   }, [items]);
-
-  useEffect(() => {
-    db.transaction((tx) => {
-      tx.executeSql(
-        `select * from items where done = ?;`,
-        [doneHeading ? 1 : 0],
-        (_, { rows: { _array } }) => setItems(_array)
-      );
-    });
-  }, []);
-
-  const heading = doneHeading ? "Completed" : "Todo";
 
   if (items === null || items.length === 0) {
     return null;
@@ -57,29 +46,23 @@ function Items({ db, done: doneHeading, forceUpdate }) {
         sections={SectionedItems}
         keyExtractor={(item, index) => item + index}
         renderItem={({ item }) => {
-          const { id, done, value, amount, dateNow } = item;
+          const { id, done, expenseName, amount, dateNow } = item;
           return (
             <TouchableOpacity
               key={id}
               style={{
-                backgroundColor: done ? "#1c9963" : "#fff",
+                backgroundColor: "#fff",
                 borderColor: "#000",
                 borderWidth: 1,
                 padding: 8,
                 margin: 5,
               }}
             >
-              <Text style={{ color: done ? "#fff" : "#000" }}>{value}</Text>
+              <Text style={{ color: "#000" }}>{expenseName}</Text>
               <Text>{amount}</Text>
               <TouchableOpacity
                 onPress={() => {
-                  db.transaction(
-                    (tx) => {
-                      tx.executeSql(`delete from items where id = ?;`, [id]);
-                    },
-                    null,
-                    forceUpdate
-                  );
+                  deleteItem(id, forceUpdate);
                 }}
               >
                 <AntDesign name="delete" size={24} color="black" />

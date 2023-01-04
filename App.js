@@ -1,46 +1,89 @@
+import { useEffect, useState, useCallback } from "react";
 import { StatusBar } from "expo-status-bar";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import Home from "./Screens/Home";
 import Settings from "./Screens/Settings";
+import AddExpense from "./Screens/AddExpense";
 import { Ionicons } from "@expo/vector-icons";
+import useFonts from "./hooks/useFonts";
 
+import * as SplashScreen from "expo-splash-screen";
+
+import { RecoilRoot, useRecoilState } from "recoil";
+
+import { db, dropTable, createTable, getItems } from "./DBQueries";
+
+import { itemState } from "./Recoil/atoms";
+
+SplashScreen.preventAutoHideAsync();
 const Tab = createBottomTabNavigator();
 export default function App() {
+  const [appIsReady, setAppIsReady] = useState(false);
+  useEffect(() => {
+    async function prepare() {
+      try {
+        await useFonts();
+        createTable();
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        setAppIsReady(true);
+      }
+    }
+    prepare();
+  }, []);
+  useEffect(() => {
+    onLayoutRootView();
+  }, [appIsReady]);
+
+  const onLayoutRootView = useCallback(async () => {
+    if (appIsReady) {
+      await SplashScreen.hideAsync();
+    }
+  }, [appIsReady]);
+
+  if (!appIsReady) {
+    return (
+      <View>
+        <ActivityIndicator size={"large"}></ActivityIndicator>
+      </View>
+    );
+  }
   return (
-    <NavigationContainer>
-      <Tab.Navigator
-        initialRouteName="Home"
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color, size }) => {
-            let iconName;
+    <RecoilRoot>
+      <NavigationContainer>
+        <Tab.Navigator
+          initialRouteName="Home"
+          screenOptions={({ route }) => ({
+            tabBarIcon: ({ focused, color, size }) => {
+              let iconName;
+              if (route.name === "Home") {
+                iconName = focused
+                  ? "ios-information-circle"
+                  : "ios-information-circle-outline";
+              } else if (route.name === "Settings") {
+                iconName = focused ? "settings" : "settings-outline";
+              } else if (route.name === "Add") {
+                iconName = focused ? "add-circle" : "add-circle-outline";
+              }
 
-            if (route.name === "Home") {
-              iconName = focused
-                ? "ios-information-circle"
-                : "ios-information-circle-outline";
-            } else if (route.name === "Settings") {
-              iconName = focused ? "ios-list" : "ios-list-outline";
-            }
-
-            // You can return any component that you like here!
-            return <Ionicons name={iconName} size={size} color={color} />;
-          },
-          tabBarActiveTintColor: "tomato",
-          tabBarInactiveTintColor: "gray",
-        })}
-      >
-        <Tab.Screen
-          name="Home"
-          component={Home}
-          options={{ title: "Simple Expense Tracker" }}
-        />
-        <Tab.Screen name="Settings" component={Settings} />
-      </Tab.Navigator>
-      <StatusBar style="auto" />
-    </NavigationContainer>
+              // You can return any component that you like here!
+              return <Ionicons name={iconName} size={size} color={color} />;
+            },
+            tabBarActiveTintColor: "tomato",
+            tabBarInactiveTintColor: "gray",
+          })}
+        >
+          <Tab.Screen name="Home" component={Home} />
+          <Tab.Screen name="Add" component={AddExpense} />
+          <Tab.Screen name="Settings" component={Settings} />
+        </Tab.Navigator>
+        <StatusBar style="auto" />
+      </NavigationContainer>
+    </RecoilRoot>
   );
 }
 

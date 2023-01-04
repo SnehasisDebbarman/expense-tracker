@@ -1,226 +1,268 @@
-import { useState, useEffect } from "react";
 import {
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
   View,
+  Text,
+  StyleSheet,
+  Modal,
+  Pressable,
+  TextInput,
   SectionList,
   FlatList,
+  Dimensions,
+  TouchableOpacity,
+  RefreshControl,
 } from "react-native";
-import Constants from "expo-constants";
-import * as SQLite from "expo-sqlite";
-import Items from "../Components/Items";
-
-function dropTable(db, tableName) {
-  db.transaction((tx) => {
-    tx.executeSql(
-      `DROP TABLE ${tableName}`,
-      [],
-      (_, result) => {
-        console.log(`Dropped table ${tableName}`);
-      },
-      (err) => {
-        console.error(`Error dropping table ${tableName}: ${err.message}`);
-      }
-    );
-  });
-}
-
-function openDatabase() {
-  if (Platform.OS === "web") {
-    return {
-      transaction: () => {
-        return {
-          executeSql: () => {},
-        };
-      },
-    };
+import React, { useState, useEffect } from "react";
+import { db, dropTable, createTable, getItems, addItem } from "../DBQueries";
+import { useRecoilState } from "recoil";
+import { itemState } from "../Recoil/atoms";
+import { FAB } from "react-native-paper";
+import moment from "moment";
+const windowWidth = Dimensions.get("window").width;
+const windowHeight = Dimensions.get("window").height;
+const Home = () => {
+  const [Refreshing, setRefreshing] = useState(false);
+  const [items, setitems] = useRecoilState(itemState);
+  const [expense, setExpense] = useState(0);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [ExpenseName, setExpenseName] = useState("");
+  const [ExpenseValue, setExpenseValue] = useState(0);
+  useEffect(() => {
+    getItems(setitems);
+  }, []);
+  useEffect(() => {
+    TotalExpense(items);
+  }, [items]);
+  function TotalExpense(items, timePeriod = 0) {
+    let expense = 0;
+    if (items) {
+      items?.forEach((it) => {
+        let am = isNaN(parseFloat(it.amount)) ? 0 : parseFloat(it.amount);
+        console.log(am);
+        expense += am;
+      });
+    }
+    setExpense(expense);
   }
 
-  const db = SQLite.openDatabase("db.db");
-  return db;
-}
-
-const db = openDatabase();
-
-export default function Home() {
-  const [text, setText] = useState(null);
-  const [Amount, setAmount] = useState("");
-  const [forceUpdate, forceUpdateId] = useForceUpdate();
-  const [addBtnDisabled, setAddBtnActive] = useState(false);
-  useEffect(() => {
-    setAddBtnActive(text === null || text === "");
-  }, [text]);
-
-  useEffect(() => {
-    // dropTable(db, "items");
-    const sql = `
-  CREATE TABLE IF NOT EXISTS items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-    done INTEGER NOT NULL DEFAULT 0,
-    expenseName TEXT NOT NULL,
-    amount TEXT NOT NULL,
-    dateNow DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-`;
-
-    db.transaction((tx) => {
-      tx.executeSql(
-        sql,
-        [],
-        (_, result) => {
-          console.log(`Created table "items"`);
-        },
-        (err) => {
-          console.error(`Error creating table "items": ${err.message}`);
-        }
-      );
-    });
-  }, []);
-
-  const add = (text, amount) => {
-    // is text empty?
-    if (text === null || text === "" || amount === null) {
-      return false;
-    }
-
-    db.transaction(
-      (tx) => {
-        tx.executeSql(
-          "insert into items (done, expenseName, amount) values (0, ?, ?)",
-          [text, amount],
-          (_, result) => {
-            console.log(`Inserted row with ID: ${result.insertId}`);
-          },
-          (err) => {
-            console.error(`Error inserting row: ${err.message}`);
-          }
-        );
-        tx.executeSql(
-          "select * from items",
-          [],
-          (_, { rows }) => {
-            console.log(`Retrieved rows: ${JSON.stringify(rows)}`);
-          },
-          (err) => {
-            console.error(`Error retrieving rows: ${err.message}`);
-          }
-        );
-      },
-      (err) => {
-        console.error(`Transaction error: ${err.message}`);
-      },
-      forceUpdate
-    );
-  };
+  function AddExpense() {
+    console.log(ExpenseName, ExpenseValue);
+    addItem(ExpenseName, ExpenseValue);
+    setModalVisible(!modalVisible);
+    setTimeout(() => {
+      getItems(setitems);
+    }, 1000);
+  }
 
   return (
-    <View style={styles.container}>
-      {Platform.OS === "web" ? (
-        <View
-          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-        >
-          <Text style={styles.heading}>
-            Expo SQlite is not supported on web!
-          </Text>
-        </View>
-      ) : (
-        <>
-          <View style={styles.flexRow}>
-            <TextInput
-              onChangeText={(text) => setText(text)}
-              placeholder="Add expense"
-              style={styles.input}
-              value={text}
-            />
-            <TextInput
-              onChangeText={(amount) => setAmount(amount)}
-              placeholder="Add Amount"
-              style={styles.input}
-              value={Amount}
-            />
-            <TouchableOpacity
-              disabled={addBtnDisabled}
-              onPress={() => {
-                console.log(Amount);
-                add(text, Amount);
-                setText(null);
-                setAmount(null);
-              }}
+    <View
+      style={{
+        height: windowHeight,
+        width: windowWidth,
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 5,
+      }}
+    >
+      <Pressable
+        icon="plus"
+        style={styles.fab}
+        onPress={() => setModalVisible(true)}
+      >
+        <Text style={{ fontSize: 35 }}>+</Text>
+      </Pressable>
+      <Text>Total Expenses</Text>
+      <Text style={{ fontSize: 60 }}>
+        <Text style={{ fontSize: 40, paddingLeft: 10, color: "grey" }}>₹</Text>
+        {expense}
+      </Text>
+      <FlatList
+        refreshControl={
+          <RefreshControl
+            refreshing={Refreshing}
+            onRefresh={() => {
+              getItems(setitems);
+            }}
+          />
+        }
+        style={{ zIndex: 1 }}
+        data={items}
+        renderItem={(item) => {
+          const { id, amount, dateNow, expenseName } = item.item;
+          return (
+            <View
+              key={`expense-item-key-${id}`}
               style={{
-                backgroundColor: addBtnDisabled ? "grey" : "rgba(255,0,0,0.8)",
-                borderWidth: 3,
-                borderColor: addBtnDisabled ? "grey" : "black",
-                margin: 15,
-                paddingHorizontal: 20,
-                paddingVertical: 10,
-                justifyContent: "center",
+                backgroundColor: "white",
+                zIndex: 1,
+                borderWidth: 2,
+                width: windowWidth * 0.9,
+                marginBottom: 5,
+                padding: 15,
+                borderRadius: 5,
+                flexDirection: "row",
               }}
             >
-              <Text
+              <View style={{ width: windowWidth * 0.35 }}>
+                <Text style={{ fontSize: 18, paddingBottom: 5 }}>
+                  {expenseName}
+                </Text>
+                <Text style={{ color: "grey" }}>
+                  {moment(dateNow).format("hh:mm a")}
+                </Text>
+              </View>
+              <View style={{ width: windowWidth * 0.45, alignSelf: "center" }}>
+                <Text style={{ fontSize: 25, textAlign: "right" }}>
+                  <Text
+                    style={{ fontSize: 15, paddingLeft: 10, color: "grey" }}
+                  >
+                    ₹
+                  </Text>
+                  {isNaN(parseFloat(amount)) ? 0 : parseFloat(amount)}
+                </Text>
+              </View>
+            </View>
+          );
+        }}
+      ></FlatList>
+      <View style={styles.centeredView}>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => {
+            setModalVisible(false);
+          }}
+        >
+          <TouchableOpacity
+            style={{
+              height: windowHeight,
+              width: windowWidth,
+            }}
+            onPressOut={() => {
+              setModalVisible(false);
+            }}
+          >
+            <View style={styles.modalView}>
+              <View
                 style={{
-                  fontWeight: "700",
-                  color: "white",
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  alignItems: "center",
                 }}
               >
-                Add
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <Items
-            key={`forceupdate-todo-${forceUpdateId}`}
-            forceUpdate={forceUpdate}
-            db={db}
-            Items={Items}
-          />
-        </>
-      )}
+                <Text style={{ fontSize: 20, paddingLeft: 10 }}>note</Text>
+                <TextInput
+                  onChangeText={(text) => setExpenseName(text)}
+                  style={{
+                    width: windowWidth * 0.7,
+                    borderRadius: 10,
+                    margin: 10,
+                    fontSize: 20,
+                    padding: 10,
+                    minWidth: 80,
+                    backgroundColor: "rgba(0,0,0,0.1)",
+                  }}
+                />
+              </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  padding: 20,
+                }}
+              >
+                <Text style={{ fontSize: 40, paddingLeft: 10 }}>₹</Text>
+                <TextInput
+                  onChangeText={(text) => setExpenseValue(text)}
+                  keyboardType="numeric"
+                  style={{
+                    borderBottomWidth: 1,
+                    minWidth: 80,
+                    fontSize: 50,
+                    padding: 5,
+                  }}
+                />
+              </View>
+              <Pressable
+                style={{
+                  width: windowWidth * 0.4,
+                  padding: 10,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  borderWidth: 2,
+                }}
+                onPress={AddExpense}
+              >
+                <Text>Add</Text>
+              </Pressable>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      </View>
     </View>
   );
-}
-
-function useForceUpdate() {
-  const [value, setValue] = useState(0);
-  return [() => setValue(value + 1), value];
-}
-
+};
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#fff",
-    flex: 1,
-    padding: 10,
+  fab: {
+    zIndex: 10,
+    position: "absolute",
+    margin: 16,
+    right: 0,
+    bottom: 100,
+    borderRadius: 70,
+    height: 70,
+    width: 70,
+    backgroundColor: "green",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  heading: {
-    fontSize: 20,
+  centeredView: {
+    flex: 1,
+    justifyContent: "flex-end",
+    alignItems: "center",
+    height: "100%",
+    width: "100%",
+  },
+  modalView: {
+    borderWidth: 2,
+    marginTop: 100,
+    height: "90%",
+    marginHorizontal: 3,
+    backgroundColor: "white",
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  button: {
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+  },
+  buttonOpen: {
+    backgroundColor: "#F194FF",
+  },
+  buttonClose: {
+    backgroundColor: "#2196F3",
+  },
+  textStyle: {
+    color: "white",
     fontWeight: "bold",
     textAlign: "center",
   },
-  flexRow: {
-    flexDirection: "row",
-  },
-  input: {
-    borderColor: "#4630eb",
-    borderRadius: 4,
-    borderWidth: 1,
-    flex: 1,
-    height: 48,
-    margin: 16,
-    padding: 8,
-  },
-  listArea: {
-    backgroundColor: "#f0f0f0",
-    flex: 1,
-    paddingTop: 16,
-  },
-  sectionContainer: {
-    marginBottom: 16,
-    marginHorizontal: 16,
-  },
-  sectionHeading: {
-    fontSize: 18,
-    marginBottom: 8,
+  modalText: {
+    marginBottom: 15,
+    textAlign: "center",
   },
 });
+
+export default Home;
