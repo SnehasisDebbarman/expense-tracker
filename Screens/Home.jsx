@@ -30,6 +30,7 @@ const Home = () => {
     getItems(setitems);
   }, []);
   useEffect(() => {
+    console.log(items);
     TotalExpense(items);
   }, [items]);
   function TotalExpense(items, timePeriod = 0) {
@@ -37,7 +38,6 @@ const Home = () => {
     if (items) {
       items?.forEach((it) => {
         let am = isNaN(parseFloat(it.amount)) ? 0 : parseFloat(it.amount);
-        console.log(am);
         expense += am;
       });
     }
@@ -45,12 +45,48 @@ const Home = () => {
   }
 
   function AddExpense() {
-    console.log(ExpenseName, ExpenseValue);
-    addItem(ExpenseName, ExpenseValue);
-    setModalVisible(!modalVisible);
+    createTable();
+    setTimeout(() => {
+      addItem(ExpenseName, ExpenseValue);
+      setModalVisible(!modalVisible);
+    }, 500);
+
     setTimeout(() => {
       getItems(setitems);
     }, 1000);
+  }
+  function renderItem(item) {
+    const { id, amount, dateNow, expenseName } = item.item;
+    return (
+      <View
+        key={`expense-item-key-${id}`}
+        style={{
+          backgroundColor: "white",
+          zIndex: 1,
+          borderWidth: 2,
+          width: windowWidth * 0.9,
+          marginBottom: 5,
+          padding: 15,
+          borderRadius: 5,
+          flexDirection: "row",
+        }}
+      >
+        <View style={{ width: windowWidth * 0.35 }}>
+          <Text style={{ fontSize: 18, paddingBottom: 5 }}>{expenseName}</Text>
+          <Text style={{ color: "grey" }}>
+            {moment(dateNow).format("hh:mm a")}
+          </Text>
+        </View>
+        <View style={{ width: windowWidth * 0.45, alignSelf: "center" }}>
+          <Text style={{ fontSize: 25, textAlign: "right" }}>
+            <Text style={{ fontSize: 15, paddingLeft: 10, color: "grey" }}>
+              ₹
+            </Text>
+            {isNaN(parseFloat(amount)) ? 0 : parseFloat(amount)}
+          </Text>
+        </View>
+      </View>
+    );
   }
 
   return (
@@ -75,55 +111,26 @@ const Home = () => {
         <Text style={{ fontSize: 40, paddingLeft: 10, color: "grey" }}>₹</Text>
         {expense}
       </Text>
+      {items.length <= 0 && (
+        <View>
+          <Text>No entries</Text>
+        </View>
+      )}
+
       <FlatList
         refreshControl={
           <RefreshControl
-            refreshing={Refreshing}
             onRefresh={() => {
               getItems(setitems);
+              setRefreshing(false);
             }}
           />
         }
         style={{ zIndex: 1 }}
         data={items}
-        renderItem={(item) => {
-          const { id, amount, dateNow, expenseName } = item.item;
-          return (
-            <View
-              key={`expense-item-key-${id}`}
-              style={{
-                backgroundColor: "white",
-                zIndex: 1,
-                borderWidth: 2,
-                width: windowWidth * 0.9,
-                marginBottom: 5,
-                padding: 15,
-                borderRadius: 5,
-                flexDirection: "row",
-              }}
-            >
-              <View style={{ width: windowWidth * 0.35 }}>
-                <Text style={{ fontSize: 18, paddingBottom: 5 }}>
-                  {expenseName}
-                </Text>
-                <Text style={{ color: "grey" }}>
-                  {moment(dateNow).format("hh:mm a")}
-                </Text>
-              </View>
-              <View style={{ width: windowWidth * 0.45, alignSelf: "center" }}>
-                <Text style={{ fontSize: 25, textAlign: "right" }}>
-                  <Text
-                    style={{ fontSize: 15, paddingLeft: 10, color: "grey" }}
-                  >
-                    ₹
-                  </Text>
-                  {isNaN(parseFloat(amount)) ? 0 : parseFloat(amount)}
-                </Text>
-              </View>
-            </View>
-          );
-        }}
+        renderItem={renderItem}
       ></FlatList>
+
       <View style={styles.centeredView}>
         <Modal
           animationType="slide"

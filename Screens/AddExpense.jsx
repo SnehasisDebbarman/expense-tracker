@@ -35,7 +35,6 @@ const AddExpense = ({ navigation }) => {
         <TouchableOpacity
           disabled={addBtnDisabled}
           onPress={() => {
-            console.log(Amount);
             addItem(text, Amount, forceUpdate);
             setText(null);
             setAmount(null);

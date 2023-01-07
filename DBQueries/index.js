@@ -91,7 +91,16 @@ export function deleteItem(id, forceUpdate) {
       tx.executeSql(`delete from items where id = ?;`, [id]);
     },
     null,
-    forceUpdate
+    () => {}
+  );
+}
+export function clearData() {
+  db.transaction(
+    (tx) => {
+      tx.executeSql(`delete from items `, []);
+    },
+    null,
+    null
   );
 }
 export function getItems(setItems) {

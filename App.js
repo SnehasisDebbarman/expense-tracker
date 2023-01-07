@@ -55,32 +55,33 @@ export default function App() {
   return (
     <RecoilRoot>
       <NavigationContainer>
-        <Tab.Navigator
-          initialRouteName="Home"
-          screenOptions={({ route }) => ({
-            tabBarIcon: ({ focused, color, size }) => {
-              let iconName;
-              if (route.name === "Home") {
-                iconName = focused
-                  ? "ios-information-circle"
-                  : "ios-information-circle-outline";
-              } else if (route.name === "Settings") {
-                iconName = focused ? "settings" : "settings-outline";
-              } else if (route.name === "Add") {
-                iconName = focused ? "add-circle" : "add-circle-outline";
-              }
+        <View style={{ paddingVerticle: 20, flex: 1 }}>
+          <Tab.Navigator
+            initialRouteName="Home"
+            screenOptions={({ route }) => ({
+              tabBarIcon: ({ focused, color, size }) => {
+                let iconName;
+                if (route.name === "Home") {
+                  iconName = focused
+                    ? "ios-information-circle"
+                    : "ios-information-circle-outline";
+                } else if (route.name === "Settings") {
+                  iconName = focused ? "settings" : "settings-outline";
+                } else if (route.name === "Add") {
+                  iconName = focused ? "add-circle" : "add-circle-outline";
+                }
 
-              // You can return any component that you like here!
-              return <Ionicons name={iconName} size={size} color={color} />;
-            },
-            tabBarActiveTintColor: "tomato",
-            tabBarInactiveTintColor: "gray",
-          })}
-        >
-          <Tab.Screen name="Home" component={Home} />
-          <Tab.Screen name="Add" component={AddExpense} />
-          <Tab.Screen name="Settings" component={Settings} />
-        </Tab.Navigator>
+                // You can return any component that you like here!
+                return <Ionicons name={iconName} size={size} color={color} />;
+              },
+              tabBarActiveTintColor: "tomato",
+              tabBarInactiveTintColor: "gray",
+            })}
+          >
+            <Tab.Screen name="Home" component={Home} />
+            <Tab.Screen name="Settings" component={Settings} />
+          </Tab.Navigator>
+        </View>
         <StatusBar style="auto" />
       </NavigationContainer>
     </RecoilRoot>
