@@ -15,10 +15,15 @@ import React, { useState, useEffect } from "react";
 import { db, dropTable, createTable, getItems, addItem } from "../DBQueries";
 import { useRecoilState } from "recoil";
 import { itemState } from "../Recoil/atoms";
-import { FAB } from "react-native-paper";
+import { FAB, Chip, Button } from "react-native-paper";
 import moment from "moment";
+import { monthWiseData } from "../Utilities/rangeWiseItems";
+import CustomPicker from "../Components/CustomPicker";
+import DropDownPicker from "react-native-dropdown-picker";
+import { expenseCategories } from "../Utilities/expenseNames";
 const windowWidth = Dimensions.get("window").width;
 const windowHeight = Dimensions.get("window").height;
+
 const Home = () => {
   const [Refreshing, setRefreshing] = useState(false);
   const [items, setitems] = useRecoilState(itemState);
@@ -26,20 +31,42 @@ const Home = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [ExpenseName, setExpenseName] = useState("");
   const [ExpenseValue, setExpenseValue] = useState(0);
+  const [ExpenseCategory, setExpenseCategory] = useState("Other");
+  const [open, setOpen] = useState(false);
+  const [subCategoryDropdownVisible, setSubCategoryDropdownVisible] =
+    useState(false);
+  const [subCategory, setSubCategory] = useState(null);
+
+  const [subCategories, setSubCategories] = useState(null);
+  useEffect(() => {
+    let subcat = [];
+    expenseCategories.filter((expenseCategory) => {
+      if (expenseCategory.title === ExpenseCategory) {
+        subcat = expenseCategory.subcategories.map((item) => {
+          return { label: item, value: item };
+        });
+      }
+    });
+    setSubCategories(subcat);
+  }, [ExpenseCategory]);
+
   useEffect(() => {
     getItems(setitems);
   }, []);
   useEffect(() => {
-    console.log(items);
     TotalExpense(items);
   }, [items]);
   function TotalExpense(items, timePeriod = 0) {
     let expense = 0;
     if (items) {
-      items?.forEach((it) => {
-        let am = isNaN(parseFloat(it.amount)) ? 0 : parseFloat(it.amount);
-        expense += am;
-      });
+      expense = items.reduce((acc, curr) => {
+        return (
+          acc +
+          curr.data.reduce((subAcc, subCurr) => {
+            return subAcc + parseFloat(subCurr.amount);
+          }, 0)
+        );
+      }, 0);
     }
     setExpense(expense);
   }
@@ -47,7 +74,7 @@ const Home = () => {
   function AddExpense() {
     createTable();
     setTimeout(() => {
-      addItem(ExpenseName, ExpenseValue);
+      addItem(ExpenseName, ExpenseValue, ExpenseCategory, subCategory);
       setModalVisible(!modalVisible);
     }, 500);
 
@@ -56,7 +83,15 @@ const Home = () => {
     }, 1000);
   }
   function renderItem(item) {
-    const { id, amount, dateNow, expenseName } = item.item;
+    const {
+      id,
+      amount,
+      dateNow,
+      expenseName,
+      currentTime,
+      expenseCategory,
+      subCategory,
+    } = item;
     return (
       <View
         key={`expense-item-key-${id}`}
@@ -64,26 +99,65 @@ const Home = () => {
           backgroundColor: "white",
           zIndex: 1,
           borderWidth: 2,
-          width: windowWidth * 0.9,
           marginBottom: 5,
           padding: 15,
           borderRadius: 5,
-          flexDirection: "row",
+          width: windowWidth * 0.9,
         }}
       >
-        <View style={{ width: windowWidth * 0.35 }}>
-          <Text style={{ fontSize: 18, paddingBottom: 5 }}>{expenseName}</Text>
-          <Text style={{ color: "grey" }}>
-            {moment(dateNow).format("hh:mm a")}
-          </Text>
-        </View>
-        <View style={{ width: windowWidth * 0.45, alignSelf: "center" }}>
-          <Text style={{ fontSize: 25, textAlign: "right" }}>
-            <Text style={{ fontSize: 15, paddingLeft: 10, color: "grey" }}>
-              ₹
+        <View
+          style={{
+            flexDirection: "row",
+          }}
+        >
+          <View style={{ width: windowWidth * 0.35 }}>
+            <Text style={{ fontSize: 18, paddingBottom: 5 }}>
+              {expenseName}
             </Text>
-            {isNaN(parseFloat(amount)) ? 0 : parseFloat(amount)}
-          </Text>
+            <Text style={{ color: "grey" }}>
+              {moment(currentTime).format("hh:mm a")}
+            </Text>
+          </View>
+          <View
+            style={{
+              width: windowWidth * 0.45,
+              alignSelf: "center",
+            }}
+          >
+            <Text style={{ fontSize: 25, textAlign: "right" }}>
+              <Text style={{ fontSize: 15, color: "grey" }}>₹</Text>
+              {isNaN(parseFloat(amount)) ? 0 : parseFloat(amount)}
+            </Text>
+          </View>
+        </View>
+        <View style={{ flexDirection: "row" }}>
+          <View
+            style={{
+              alignSelf: "flex-start",
+              paddingVertical: 5,
+              paddingHorizontal: 10,
+              marginVertical: 5,
+              borderWidth: 1,
+              borderRadius: "50%",
+              marginRight: 5,
+            }}
+          >
+            <Text>{expenseCategory}</Text>
+          </View>
+          {subCategory !== null && (
+            <View
+              style={{
+                alignSelf: "flex-start",
+                paddingVertical: 5,
+                paddingHorizontal: 10,
+                marginVertical: 5,
+                borderWidth: 1,
+                borderRadius: "50%",
+              }}
+            >
+              <Text>{subCategory}</Text>
+            </View>
+          )}
         </View>
       </View>
     );
@@ -97,6 +171,7 @@ const Home = () => {
         justifyContent: "center",
         alignItems: "center",
         padding: 5,
+        backgroundColor: "white",
       }}
     >
       <Pressable
@@ -106,30 +181,49 @@ const Home = () => {
       >
         <Text style={{ fontSize: 35 }}>+</Text>
       </Pressable>
-      <Text>Total Expenses</Text>
-      <Text style={{ fontSize: 60 }}>
-        <Text style={{ fontSize: 40, paddingLeft: 10, color: "grey" }}>₹</Text>
-        {expense}
-      </Text>
+      <View
+        style={{
+          justifyContent: "center",
+          alignItems: "center",
+          width: "100%",
+          padding: 10,
+        }}
+      >
+        <Text>Total Expenses</Text>
+        <Text style={{ fontSize: 60 }}>
+          <Text style={{ fontSize: 40, paddingLeft: 10, color: "grey" }}>
+            ₹
+          </Text>
+          {expense}
+        </Text>
+      </View>
+
       {items.length <= 0 && (
         <View>
           <Text>No entries</Text>
         </View>
       )}
 
-      <FlatList
-        refreshControl={
-          <RefreshControl
-            onRefresh={() => {
-              getItems(setitems);
-              setRefreshing(false);
-            }}
-          />
-        }
-        style={{ zIndex: 1 }}
-        data={items}
-        renderItem={renderItem}
-      ></FlatList>
+      <SectionList
+        sections={items}
+        keyExtractor={(item, index) => item + index}
+        renderItem={({ item }) => renderItem(item)}
+        renderSectionHeader={(item) => {
+          return (
+            <View
+              style={{
+                justifyContent: "center",
+                width: "100%",
+                alignItems: "center",
+                padding: 5,
+                backgroundColor: "white",
+              }}
+            >
+              <Text style={{}}>{item.section.date}</Text>
+            </View>
+          );
+        }}
+      />
 
       <View style={styles.centeredView}>
         <Modal
@@ -171,6 +265,54 @@ const Home = () => {
                   }}
                 />
               </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  zIndex: 10,
+                  width: windowWidth * 0.95,
+                  justifyContent: "space-around",
+                }}
+              >
+                <View>
+                  <Text style={{ paddingVertical: 5 }}>Category</Text>
+                  <DropDownPicker
+                    containerStyle={{
+                      width: windowWidth * 0.4,
+                    }}
+                    schema={{
+                      label: "title",
+                      value: "title",
+                    }}
+                    open={open}
+                    value={ExpenseCategory}
+                    items={expenseCategories}
+                    setOpen={setOpen}
+                    setValue={setExpenseCategory}
+                  />
+                </View>
+                <View>
+                  <Text style={{ paddingVertical: 5 }}> Sub Category</Text>
+                  <DropDownPicker
+                    containerStyle={{
+                      width: windowWidth * 0.4,
+                    }}
+                    open={subCategoryDropdownVisible}
+                    value={subCategory}
+                    items={subCategories}
+                    setOpen={setSubCategoryDropdownVisible}
+                    setValue={setSubCategory}
+                  />
+                </View>
+              </View>
+
+              {/* <DropDownPicker
+                open={subCategoryDropdownVisible}
+                value={subCategory}
+                items={subCategories}
+                setOpen={setSubCategoryDropdownVisible}
+                setValue={setSubCategory}
+              /> */}
+
               <View
                 style={{
                   flexDirection: "row",

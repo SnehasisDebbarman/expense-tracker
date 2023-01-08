@@ -7,14 +7,15 @@ import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import Home from "./Screens/Home";
 import Settings from "./Screens/Settings";
 import AddExpense from "./Screens/AddExpense";
-import { Ionicons } from "@expo/vector-icons";
+import Graph from "./Screens/Graph";
+import { Ionicons, Entypo } from "@expo/vector-icons";
 import useFonts from "./hooks/useFonts";
 
 import * as SplashScreen from "expo-splash-screen";
 
 import { RecoilRoot, useRecoilState } from "recoil";
 
-import { db, dropTable, createTable, getItems } from "./DBQueries";
+import { db, dropTable, createTable, getItems, clearData } from "./DBQueries";
 
 import { itemState } from "./Recoil/atoms";
 
@@ -27,6 +28,7 @@ export default function App() {
       try {
         await useFonts();
         createTable();
+        // dropTable();
       } catch (e) {
         console.warn(e);
       } finally {
@@ -67,11 +69,16 @@ export default function App() {
                     : "ios-information-circle-outline";
                 } else if (route.name === "Settings") {
                   iconName = focused ? "settings" : "settings-outline";
-                } else if (route.name === "Add") {
+                } else if (route.name === "Graph") {
                   iconName = focused ? "add-circle" : "add-circle-outline";
                 }
 
                 // You can return any component that you like here!
+                if (route.name === "Graph") {
+                  return (
+                    <Entypo name="circular-graph" size={size} color={color} />
+                  );
+                }
                 return <Ionicons name={iconName} size={size} color={color} />;
               },
               tabBarActiveTintColor: "tomato",
@@ -79,6 +86,7 @@ export default function App() {
             })}
           >
             <Tab.Screen name="Home" component={Home} />
+            <Tab.Screen name="Graph" component={Graph} />
             <Tab.Screen name="Settings" component={Settings} />
           </Tab.Navigator>
         </View>

@@ -2,6 +2,8 @@ import * as SQLite from "expo-sqlite";
 import { useState } from "react";
 import { useRecoilState } from "recoil";
 import { itemState } from "../Recoil/atoms";
+import { sectionsedList } from "../Utilities/sectionisedList";
+import moment from "moment";
 //open db
 function openDatabase() {
   if (Platform.OS === "web") {
@@ -26,6 +28,7 @@ export function dropTable(tableName = "items") {
       `DROP TABLE ${tableName}`,
       [],
       (_, result) => {
+        createTable();
         console.log(`Dropped table ${tableName}`);
       },
       (err) => {
@@ -36,39 +39,59 @@ export function dropTable(tableName = "items") {
 }
 //create table items
 export function createTable() {
-  const sql = `
-    CREATE TABLE IF NOT EXISTS items (
-      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      done INTEGER NOT NULL DEFAULT 0,
-      expenseName TEXT NOT NULL,
-      amount TEXT NOT NULL,
-      dateNow DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-  `;
-
   db.transaction((tx) => {
     tx.executeSql(
-      sql,
+      'DELETE FROM sqlite_master WHERE type="table";',
       [],
-      (_, result) => {
-        console.log(`Created table "items"`);
-      },
-      (err) => {
-        console.error(`Error creating table "items": ${err.message}`);
+      (_, { rows }) => {
+        console.log(rows._array);
       }
     );
   });
+  const sql = `
+  CREATE TABLE IF NOT EXISTS items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    expenseName TEXT NOT NULL,
+    expenseCategory TEXT NOT NULL,
+    subCategory TEXT,
+    amount TEXT NOT NULL,
+    dateNow TEXT NOT NULL,
+    currentTime TEXT NOT NULL
+  );
+  `;
+
+  db.transaction((tx) => {
+    tx.executeSql(sql, null, null, (err) => {
+      {
+        console.log("2", err);
+      }
+    });
+  });
 }
-export function addItem(text, amount) {
-  if (text === null || text === "" || amount === null) {
-    return false;
+export function addItem(
+  expenseName,
+  amount = 0,
+  expenseCategory = "others",
+  subCategory = null
+) {
+  let currentDate = moment().format("D MMMM Y");
+  let currentTime = new Date().toISOString();
+  if (expenseName === null || expenseName === "") {
+    expenseName = expenseCategory;
   }
 
   db.transaction(
     (tx) => {
       tx.executeSql(
-        "insert into items (done, expenseName, amount) values (0, ?, ?)",
-        [text, amount],
+        "insert into items (expenseName, amount, expenseCategory, dateNow, currentTime,subCategory) values ( ?, ?, ?, ?, ?, ?)",
+        [
+          expenseName,
+          amount,
+          expenseCategory,
+          currentDate,
+          currentTime,
+          subCategory,
+        ],
         (_, result) => {
           console.log(`Inserted row with ID: ${result.insertId}`);
           return true;
@@ -104,14 +127,14 @@ export function clearData() {
   );
 }
 export function getItems(setItems) {
-  // const [Items, setItems] = useRecoilState(itemState);
-  // let items = [];
   db.transaction((tx) => {
     tx.executeSql(
       `select * from items;`,
       [],
-      (_, { rows: { _array } }) => setItems(_array),
-      (it) => console.log(it)
+      (_, { rows: { _array } }) => {
+        setItems(sectionsedList(_array));
+      },
+      null
     );
   });
 }
