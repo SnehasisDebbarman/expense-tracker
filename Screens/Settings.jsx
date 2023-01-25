@@ -18,7 +18,7 @@ const Settings = ({ navigation }) => {
           padding: 10,
         }}
         onPress={() => {
-          clearData();
+          dropTable();
           setTimeout(() => {
             getItems(setitems);
             navigation.navigate("Home");

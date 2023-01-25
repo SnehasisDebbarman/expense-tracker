@@ -83,7 +83,7 @@ export function addItem(
   db.transaction(
     (tx) => {
       tx.executeSql(
-        "insert into items (expenseName, amount, expenseCategory, dateNow, currentTime,subCategory) values ( ?, ?, ?, ?, ?, ?)",
+        "insert into items (expenseName, amount, expenseCategory, dateNow, currentTime, subCategory) values ( ?, ?, ?, ?, ?, ?)",
         [
           expenseName,
           amount,
@@ -97,6 +97,7 @@ export function addItem(
           return true;
         },
         (err) => {
+          console.log(err);
           console.error(`Error inserting row: ${err.message}`);
           return false;
         }
