@@ -2,7 +2,7 @@
   "expo": {
     "name": "expense-tracker",
     "slug": "expense-tracker",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -15,7 +15,9 @@
       "fallbackToCacheTimeout": 0,
       "url": "https://u.expo.dev/4d22084b-7446-4b57-985e-bb8bffe47b02"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true
     },
@@ -25,7 +27,7 @@
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.snehasis.debbarman.expensetracker",
-      "versionCode": 2
+      "versionCode": 5
     },
     "web": {
       "favicon": "./assets/favicon.png"
