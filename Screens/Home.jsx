@@ -80,6 +80,10 @@ const Home = () => {
 
     setTimeout(() => {
       getItems(setitems);
+      setExpense(0);
+      setExpenseCategory("Other");
+      setSubCategories(null);
+      setExpenseName("");
     }, 1000);
   }
   function renderItem(item) {
@@ -206,6 +210,7 @@ const Home = () => {
 
       <SectionList
         sections={items}
+        ListFooterComponent={<View style={{ height: 120 }}></View>}
         keyExtractor={(item, index) => item + index}
         renderItem={({ item }) => renderItem(item)}
         renderSectionHeader={(item) => {
