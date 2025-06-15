@@ -118,6 +118,22 @@ export function deleteItem(id, forceUpdate) {
     () => {}
   );
 }
+
+export function updateItem(id, fields = {}) {
+  const keys = Object.keys(fields);
+  if (keys.length === 0) return;
+  const setClause = keys.map(k => `${k} = ?`).join(', ');
+  const values = keys.map(k => fields[k]);
+  values.push(id);
+  db.transaction(tx => {
+    tx.executeSql(
+      `UPDATE items SET ${setClause} WHERE id = ?`,
+      values,
+      null,
+      (err)=>console.error('Update error', err)
+    );
+  });
+}
 export function clearData() {
   db.transaction(
     (tx) => {
