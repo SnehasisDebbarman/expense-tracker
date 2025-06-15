@@ -6,20 +6,19 @@ import {
   Pressable,
   TextInput,
   SectionList,
-  FlatList,
   Dimensions,
   TouchableOpacity,
-  RefreshControl,
 } from "react-native";
 import React, { useState, useEffect } from "react";
-import { db, dropTable, createTable, getItems, addItem } from "../DBQueries";
+import { createTable, getItems, addItem, deleteItem } from "../DBQueries";
 import { useRecoilState } from "recoil";
 import { itemState } from "../Recoil/atoms";
-import { FAB, Chip, Button } from "react-native-paper";
+import ExpenseItem from "../Components/ExpenseItem";
+import { filterByMonth } from "../Utilities/filter";
+import { FAB } from "react-native-paper";
 import moment from "moment";
-import { monthWiseData } from "../Utilities/rangeWiseItems";
-import CustomPicker from "../Components/CustomPicker";
 import DropDownPicker from "react-native-dropdown-picker";
+import { Picker } from "@react-native-picker/picker";
 import { expenseCategories } from "../Utilities/expenseNames";
 const windowWidth = Dimensions.get("window").width;
 const windowHeight = Dimensions.get("window").height;
@@ -27,6 +26,8 @@ const windowHeight = Dimensions.get("window").height;
 const Home = () => {
   const [Refreshing, setRefreshing] = useState(false);
   const [items, setitems] = useRecoilState(itemState);
+  const [filteredItems, setFilteredItems] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [expense, setExpense] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
   const [ExpenseName, setExpenseName] = useState("");
@@ -54,12 +55,14 @@ const Home = () => {
     getItems(setitems);
   }, []);
   useEffect(() => {
-    TotalExpense(items);
-  }, [items]);
-  function TotalExpense(items, timePeriod = 0) {
+    const monthItems = filterByMonth(items, selectedMonth);
+    setFilteredItems(monthItems);
+    TotalExpense(monthItems);
+  }, [items, selectedMonth]);
+  function TotalExpense(data) {
     let expense = 0;
-    if (items) {
-      expense = items.reduce((acc, curr) => {
+    if (data) {
+      expense = data.reduce((acc, curr) => {
         return (
           acc +
           curr.data.reduce((subAcc, subCurr) => {
@@ -79,91 +82,35 @@ const Home = () => {
     }, 500);
 
     setTimeout(() => {
-      getItems(setitems);
+      getItems((arr)=>{
+        setitems(arr);
+        setFilteredItems(filterByMonth(arr, selectedMonth));
+      });
       setExpense(0);
       setExpenseCategory("Other");
       setSubCategories(null);
       setExpenseName("");
     }, 1000);
   }
+
+  function handleDelete(expense) {
+    deleteItem(expense.id);
+    setTimeout(() => getItems((arr)=>{
+      setitems(arr);
+      setFilteredItems(filterByMonth(arr, selectedMonth));
+    }), 300);
+  }
+
+  function handleEdit(expense) {
+    // placeholder for future edit feature
+  }
   function renderItem(item) {
-    const {
-      id,
-      amount,
-      dateNow,
-      expenseName,
-      currentTime,
-      expenseCategory,
-      subCategory,
-    } = item;
     return (
-      <View
-        key={`expense-item-key-${id}`}
-        style={{
-          backgroundColor: "white",
-          zIndex: 1,
-          borderWidth: 2,
-          marginBottom: 5,
-          padding: 15,
-          borderRadius: 5,
-          width: windowWidth * 0.9,
-        }}
-      >
-        <View
-          style={{
-            flexDirection: "row",
-          }}
-        >
-          <View style={{ width: windowWidth * 0.35 }}>
-            <Text style={{ fontSize: 18, paddingBottom: 5 }}>
-              {expenseName}
-            </Text>
-            <Text style={{ color: "grey" }}>
-              {moment(currentTime).format("hh:mm a")}
-            </Text>
-          </View>
-          <View
-            style={{
-              width: windowWidth * 0.45,
-              alignSelf: "center",
-            }}
-          >
-            <Text style={{ fontSize: 25, textAlign: "right" }}>
-              <Text style={{ fontSize: 15, color: "grey" }}>₹</Text>
-              {isNaN(parseFloat(amount)) ? 0 : parseFloat(amount)}
-            </Text>
-          </View>
-        </View>
-        <View style={{ flexDirection: "row" }}>
-          <View
-            style={{
-              alignSelf: "flex-start",
-              paddingVertical: 5,
-              paddingHorizontal: 10,
-              marginVertical: 5,
-              borderWidth: 1,
-              borderRadius: 20,
-              marginRight: 5,
-            }}
-          >
-            <Text>{expenseCategory}</Text>
-          </View>
-          {subCategory !== null && (
-            <View
-              style={{
-                alignSelf: "flex-start",
-                paddingVertical: 5,
-                paddingHorizontal: 10,
-                marginVertical: 5,
-                borderWidth: 1,
-                borderRadius: 20,
-              }}
-            >
-              <Text>{subCategory}</Text>
-            </View>
-          )}
-        </View>
-      </View>
+      <ExpenseItem
+        item={item}
+        onDelete={handleDelete}
+        onEdit={handleEdit}
+      />
     );
   }
 
@@ -178,13 +125,11 @@ const Home = () => {
         backgroundColor: "white",
       }}
     >
-      <Pressable
+      <FAB
         icon="plus"
         style={styles.fab}
         onPress={() => setModalVisible(true)}
-      >
-        <Text style={{ fontSize: 35 }}>+</Text>
-      </Pressable>
+      />
       <View
         style={{
           justifyContent: "center",
@@ -200,6 +145,15 @@ const Home = () => {
           </Text>
           {expense}
         </Text>
+        <Picker
+          selectedValue={selectedMonth}
+          onValueChange={(value)=>setSelectedMonth(value)}
+          style={{width:200}}
+        >
+          {Array.from({length:12}).map((_,i)=>(
+            <Picker.Item key={`month-${i}`} label={moment().month(i).format('MMM')} value={i} />
+          ))}
+        </Picker>
       </View>
 
       {items.length <= 0 && (
@@ -209,7 +163,7 @@ const Home = () => {
       )}
 
       <SectionList
-        sections={items}
+        sections={filteredItems}
         ListFooterComponent={<View style={{ height: 120 }}></View>}
         keyExtractor={(item, index) => item + index}
         renderItem={({ item }) => renderItem(item)}

@@ -1,7 +1,6 @@
 import {
   View,
   Text,
-  FlatList,
   ScrollView,
   TouchableOpacity,
 } from "react-native";
@@ -9,7 +8,6 @@ import React, { useState, useEffect } from "react";
 import { getItems } from "../DBQueries";
 import {
   VictoryPie,
-  VictoryContainer,
   VictoryLabel,
   VictoryChart,
   VictoryBar,
@@ -17,11 +15,13 @@ import {
 import { useRecoilState } from "recoil";
 import { itemState } from "../Recoil/atoms";
 import { DataTable } from "react-native-paper";
+import { getWeeklyTotals, getMonthlyTotals } from "../Utilities/totals";
 
 const Graph = () => {
   const [Items, setItems] = useRecoilState(itemState);
   const [CategorisedItems, setCategorisedItems] = useState([]);
-  const [graphType, setGraphType] = useState("pie");
+  const [weeklyData, setWeeklyData] = useState([]);
+  const [graphType, setGraphType] = useState("category");
   const [Refresh, setRefresh] = useState(false);
   useEffect(() => {
     getItems(setItems);
@@ -49,6 +49,7 @@ const Graph = () => {
         });
       });
       setCategorisedItems(pieData);
+      setWeeklyData(getWeeklyTotals(Items));
       setRefresh(!Refresh);
       console.log(pieData);
     }
@@ -68,22 +69,22 @@ const Graph = () => {
             style={{
               paddingVertical: 10,
               paddingHorizontal: 20,
-              backgroundColor: graphType === "pie" ? "green" : "white",
+              backgroundColor: graphType === "category" ? "green" : "white",
               borderTopLeftRadius: 10,
               borderBottomLeftRadius: 10,
               borderWidth: 0.3,
               borderColor: "green",
             }}
             onPress={() => {
-              setGraphType("pie");
+              setGraphType("category");
             }}
           >
             <Text
               style={{
-                color: graphType === "pie" ? "white" : "black",
+                color: graphType === "category" ? "white" : "black",
               }}
             >
-              Pie
+              Category
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -91,22 +92,22 @@ const Graph = () => {
               marginRight: 10,
               paddingVertical: 10,
               paddingHorizontal: 20,
-              backgroundColor: graphType !== "pie" ? "green" : "white",
+              backgroundColor: graphType === "weekly" ? "green" : "white",
               borderTopRightRadius: 10,
               borderBottomRightRadius: 10,
               borderWidth: 0.3,
               borderColor: "green",
             }}
             onPress={() => {
-              setGraphType("bar");
+              setGraphType("weekly");
             }}
           >
             <Text
               style={{
-                color: graphType !== "pie" ? "white" : "black",
+                color: graphType === "weekly" ? "white" : "black",
               }}
             >
-              bar
+              Weekly
             </Text>
           </TouchableOpacity>
         </View>
@@ -120,11 +121,11 @@ const Graph = () => {
               marginTop: 10,
             }}
           >
-            {graphType !== "pie" ? (
+            {graphType === "weekly" ? (
               <VictoryChart domainPadding={30}>
                 <VictoryBar
                   style={{ data: { fill: "#c43a31" } }}
-                  data={CategorisedItems}
+                  data={weeklyData}
                 />
               </VictoryChart>
             ) : (
@@ -155,10 +156,10 @@ const Graph = () => {
         }}
       >
         <DataTable.Header>
-          <DataTable.Title>Category</DataTable.Title>
+          <DataTable.Title>{graphType === 'weekly' ? 'Week' : 'Category'}</DataTable.Title>
           <DataTable.Title numeric>expense</DataTable.Title>
         </DataTable.Header>
-        {CategorisedItems.map((it) => {
+        {(graphType === 'weekly' ? weeklyData : CategorisedItems).map((it) => {
           return (
             <DataTable.Row key={`item-category-list-${it.x}`}>
               <DataTable.Cell>{it.x}</DataTable.Cell>

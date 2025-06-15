@@ -3,7 +3,7 @@ import { StatusBar } from "expo-status-bar";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View, useColorScheme } from "react-native";
 import Home from "./Screens/Home";
 import Settings from "./Screens/Settings";
 import AddExpense from "./Screens/AddExpense";
@@ -13,7 +13,8 @@ import useFonts from "./hooks/useFonts";
 
 import * as SplashScreen from "expo-splash-screen";
 
-import { RecoilRoot, useRecoilState } from "recoil";
+import { RecoilRoot } from "recoil";
+import { Provider as PaperProvider, MD3DarkTheme, MD3LightTheme } from 'react-native-paper';
 
 import { db, dropTable, createTable, getItems, clearData } from "./DBQueries";
 
@@ -23,6 +24,7 @@ SplashScreen.preventAutoHideAsync();
 const Tab = createBottomTabNavigator();
 export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
+  const colorScheme = useColorScheme();
   useEffect(() => {
     async function prepare() {
       try {
@@ -55,9 +57,10 @@ export default function App() {
     );
   }
   return (
-    <RecoilRoot>
-      <NavigationContainer>
-        <View style={{ paddingVerticle: 20, flex: 1 }}>
+    <PaperProvider theme={colorScheme === 'dark' ? MD3DarkTheme : MD3LightTheme}>
+      <RecoilRoot>
+        <NavigationContainer>
+          <View style={{ paddingVerticle: 20, flex: 1 }}>
           <Tab.Navigator
             initialRouteName="Home"
             screenOptions={({ route }) => ({
@@ -93,6 +96,7 @@ export default function App() {
         <StatusBar style="auto" />
       </NavigationContainer>
     </RecoilRoot>
+    </PaperProvider>
   );
 }
 
