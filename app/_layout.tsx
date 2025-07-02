@@ -1,11 +1,10 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as React from 'react';
 import { FAB, Provider as PaperProvider } from 'react-native-paper';
 import 'react-native-reanimated';
-import AddExpenseModal from '../src/components/AddExpenseModal';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 
@@ -14,12 +13,16 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
-  const [modalVisible, setModalVisible] = React.useState(false);
+  const router = useRouter();
 
   if (!loaded) {
     // Async font loading only occurs in development.
     return null;
   }
+
+  const handleAddExpense = () => {
+    router.push('/add-expense');
+  };
 
   return (
     <PaperProvider>
@@ -29,15 +32,10 @@ export default function RootLayout() {
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="auto" />
-        <AddExpenseModal
-          visible={modalVisible}
-          onClose={() => setModalVisible(false)}
-          onExpenseAdded={() => { }}
-        />
         <FAB
           icon="plus"
           style={{ position: 'absolute', right: 24, bottom: 90, zIndex: 1000 }}
-          onPress={() => setModalVisible(true)}
+          onPress={handleAddExpense}
           label="Add"
         />
       </ThemeProvider>

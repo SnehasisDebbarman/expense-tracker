@@ -4,12 +4,19 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import * as React from 'react';
 import { Dimensions, FlatList, ScrollView, View } from 'react-native';
 import { BarChart } from 'react-native-chart-kit';
-import { Appbar, FAB, List, Text } from 'react-native-paper';
+import { Appbar, Button, Card, FAB, List, Menu, Text, ToggleButton } from 'react-native-paper';
 
 export default function DashboardScreen() {
   const router = useRouter();
   const [expenses, setExpenses] = React.useState<Expense[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [mode, setMode] = React.useState<'expenses' | 'income'>('expenses');
+  const [monthMenuVisible, setMonthMenuVisible] = React.useState(false);
+  const [selectedMonth, setSelectedMonth] = React.useState(new Date().getMonth());
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+  ];
 
   const loadExpenses = React.useCallback(() => {
     setLoading(true);
@@ -34,6 +41,25 @@ export default function DashboardScreen() {
     }, [loadExpenses])
   );
 
+  // Filter expenses by selected month
+  const filteredExpenses = React.useMemo(() => {
+    return expenses.filter(exp => {
+      const expDate = new Date(exp.date);
+      return expDate.getMonth() === selectedMonth;
+    });
+  }, [expenses, selectedMonth]);
+
+  // Calculate totals
+  const totalBalance = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+  const today = new Date();
+  const dayTotal = filteredExpenses.filter(exp => new Date(exp.date).toDateString() === today.toDateString()).reduce((sum, exp) => sum + exp.amount, 0);
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - today.getDay());
+  const weekTotal = filteredExpenses.filter(exp => {
+    const d = new Date(exp.date);
+    return d >= weekStart && d <= today;
+  }).reduce((sum, exp) => sum + exp.amount, 0);
+
   // Calculate totals per category for the chart
   const categoryTotals = React.useMemo(() => {
     const totals: { [category: string]: number } = {};
@@ -54,11 +80,50 @@ export default function DashboardScreen() {
   };
 
   return (
-    <View style={{ flex: 1 }}>
-      <Appbar.Header>
-        <Appbar.Content title="Expense Dashboard" />
-        <Appbar.Action icon="refresh" onPress={loadExpenses} />
+    <View style={{ flex: 1, backgroundColor: '#f8f9fa' }}>
+      <Appbar.Header style={{ backgroundColor: '#fff', elevation: 0 }}>
+        <Appbar.Content title="" />
+        <Menu
+          visible={monthMenuVisible}
+          onDismiss={() => setMonthMenuVisible(false)}
+          anchor={<Button onPress={() => setMonthMenuVisible(true)}>{months[selectedMonth]}</Button>}
+        >
+          {months.map((m, i) => (
+            <Menu.Item key={m} onPress={() => { setSelectedMonth(i); setMonthMenuVisible(false); }} title={m} />
+          ))}
+        </Menu>
+        <ToggleButton.Row
+          onValueChange={v => setMode(v as 'expenses' | 'income')}
+          value={mode}
+        >
+          <ToggleButton icon="trending-down" value="expenses" />
+          <ToggleButton icon="trending-up" value="income" />
+        </ToggleButton.Row>
       </Appbar.Header>
+      <View style={{ alignItems: 'center', marginTop: 12, marginBottom: 8 }}>
+        <Text style={{ fontSize: 28, fontWeight: 'bold' }}>₹{totalBalance.toLocaleString()}</Text>
+        <Text style={{ color: '#888', fontSize: 14 }}>Total Balance</Text>
+      </View>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 12 }}>
+        <Card style={{ flex: 1, margin: 4, borderRadius: 16, backgroundColor: '#fff', elevation: 1 }}>
+          <Card.Content style={{ alignItems: 'center' }}>
+            <Text style={{ fontWeight: 'bold', fontSize: 16 }}>Day</Text>
+            <Text style={{ fontSize: 18, color: '#007AFF' }}>₹{dayTotal.toLocaleString()}</Text>
+          </Card.Content>
+        </Card>
+        <Card style={{ flex: 1, margin: 4, borderRadius: 16, backgroundColor: '#fff', elevation: 1 }}>
+          <Card.Content style={{ alignItems: 'center' }}>
+            <Text style={{ fontWeight: 'bold', fontSize: 16 }}>Week</Text>
+            <Text style={{ fontSize: 18, color: '#34C759' }}>₹{weekTotal.toLocaleString()}</Text>
+          </Card.Content>
+        </Card>
+        <Card style={{ flex: 1, margin: 4, borderRadius: 16, backgroundColor: '#fff', elevation: 1 }}>
+          <Card.Content style={{ alignItems: 'center' }}>
+            <Text style={{ fontWeight: 'bold', fontSize: 16 }}>Month</Text>
+            <Text style={{ fontSize: 18, color: '#FF9500' }}>₹{totalBalance.toLocaleString()}</Text>
+          </Card.Content>
+        </Card>
+      </View>
       <ScrollView>
         {expenses.length > 0 && chartData.labels.length > 0 && (
           <BarChart
@@ -91,6 +156,7 @@ export default function DashboardScreen() {
                 title={`${item.category}: ₹${item.amount}`}
                 description={`${item.date} - ${item.notes}`}
                 left={props => <List.Icon {...props} icon="currency-inr" />}
+                onPress={() => router.push(`/edit-expense?id=${item.id}`)}
               />
             )}
           />

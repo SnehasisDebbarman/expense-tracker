@@ -44,3 +44,18 @@ export async function getAllExpenses(callback: (expenses: Expense[]) => void) {
   const rows = await db.getAllAsync<Expense>('SELECT * FROM expenses');
   callback(rows);
 }
+
+export async function getExpenseById(id: number): Promise<Expense | undefined> {
+  const db = await getDB();
+  const rows = await db.getAllAsync<Expense>('SELECT * FROM expenses WHERE id = ?', [id]);
+  return rows[0];
+}
+
+export async function updateExpense(expense: Expense) {
+  if (expense.id === undefined) throw new Error('Expense id is required for update');
+  const db = await getDB();
+  await db.runAsync(
+    'UPDATE expenses SET date = ?, category = ?, amount = ?, notes = ? WHERE id = ?',
+    [expense.date, expense.category, expense.amount, expense.notes, expense.id]
+  );
+}
