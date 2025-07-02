@@ -8,6 +8,7 @@ import Home from "./Screens/Home";
 import Settings from "./Screens/Settings";
 import AddExpense from "./Screens/AddExpense";
 import Graph from "./Screens/Graph";
+import Export from "./Screens/Export";
 import { Ionicons, Entypo } from "@expo/vector-icons";
 import useFonts from "./hooks/useFonts";
 
@@ -116,6 +117,8 @@ export default function App() {
                   iconName = focused ? "settings" : "settings-outline";
                 } else if (route.name === "Graph") {
                   iconName = focused ? "add-circle" : "add-circle-outline";
+                } else if (route.name === "Export") {
+                  iconName = focused ? "share" : "share-outline";
                 }
 
                 // You can return any component that you like here!
@@ -132,6 +135,7 @@ export default function App() {
           >
             <Tab.Screen name="Home" component={Home} />
             <Tab.Screen name="Graph" component={Graph} />
+            <Tab.Screen name="Export" component={Export} />
             <Tab.Screen name="Settings" component={Settings} />
           </Tab.Navigator>
         </View>
