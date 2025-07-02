@@ -3,18 +3,19 @@ import { StatusBar } from "expo-status-bar";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { ActivityIndicator, StyleSheet, Text, View, useColorScheme } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View, Platform } from "react-native";
 import Home from "./Screens/Home";
 import Settings from "./Screens/Settings";
 import AddExpense from "./Screens/AddExpense";
 import Graph from "./Screens/Graph";
+import Export from "./Screens/Export";
 import { Ionicons, Entypo } from "@expo/vector-icons";
 import useFonts from "./hooks/useFonts";
 
 import * as SplashScreen from "expo-splash-screen";
 
 import { RecoilRoot } from "recoil";
-import { Provider as PaperProvider, MD3DarkTheme, MD3LightTheme } from 'react-native-paper';
+import { Provider as PaperProvider, MD3DarkTheme, configureFonts } from 'react-native-paper';
 
 import { db, dropTable, createTable, getItems, clearData } from "./DBQueries";
 
@@ -24,7 +25,49 @@ SplashScreen.preventAutoHideAsync();
 const Tab = createBottomTabNavigator();
 export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
-  const colorScheme = useColorScheme();
+
+  const fontConfig = {
+    ios: {
+      regular: {
+        fontFamily: 'Menlo',
+        fontWeight: 'normal',
+      },
+      medium: {
+        fontFamily: 'Menlo',
+        fontWeight: 'normal',
+      },
+    },
+    android: {
+      regular: {
+        fontFamily: 'monospace',
+        fontWeight: 'normal',
+      },
+      medium: {
+        fontFamily: 'monospace',
+        fontWeight: 'normal',
+      },
+    },
+  };
+
+  const consoleTheme = {
+    ...MD3DarkTheme,
+    colors: {
+      ...MD3DarkTheme.colors,
+      background: '#000000',
+      surface: '#000000',
+      primary: '#00ff00',
+      onSurface: '#00ff00',
+      onBackground: '#00ff00',
+    },
+    fonts: configureFonts({ config: fontConfig }),
+  };
+
+  Text.defaultProps = Text.defaultProps || {};
+  Text.defaultProps.style = {
+    ...(Text.defaultProps.style || {}),
+    color: consoleTheme.colors.primary,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  };
   useEffect(() => {
     async function prepare() {
       try {
@@ -57,10 +100,10 @@ export default function App() {
     );
   }
   return (
-    <PaperProvider theme={colorScheme === 'dark' ? MD3DarkTheme : MD3LightTheme}>
+    <PaperProvider theme={consoleTheme}>
       <RecoilRoot>
         <NavigationContainer>
-          <View style={{ paddingVerticle: 20, flex: 1 }}>
+          <View style={{ paddingVerticle: 20, flex: 1, backgroundColor: consoleTheme.colors.background }}>
           <Tab.Navigator
             initialRouteName="Home"
             screenOptions={({ route }) => ({
@@ -74,6 +117,8 @@ export default function App() {
                   iconName = focused ? "settings" : "settings-outline";
                 } else if (route.name === "Graph") {
                   iconName = focused ? "add-circle" : "add-circle-outline";
+                } else if (route.name === "Export") {
+                  iconName = focused ? "share" : "share-outline";
                 }
 
                 // You can return any component that you like here!
@@ -90,10 +135,11 @@ export default function App() {
           >
             <Tab.Screen name="Home" component={Home} />
             <Tab.Screen name="Graph" component={Graph} />
+            <Tab.Screen name="Export" component={Export} />
             <Tab.Screen name="Settings" component={Settings} />
           </Tab.Navigator>
         </View>
-        <StatusBar style="auto" />
+        <StatusBar style="light" />
       </NavigationContainer>
     </RecoilRoot>
     </PaperProvider>

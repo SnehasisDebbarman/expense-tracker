@@ -155,3 +155,16 @@ export function getItems(setItems) {
     );
   });
 }
+
+export function getAllItems(callback) {
+  db.transaction((tx) => {
+    tx.executeSql(
+      `select * from items;`,
+      [],
+      (_, { rows: { _array } }) => {
+        callback(_array);
+      },
+      (err) => console.error(err)
+    );
+  });
+}
