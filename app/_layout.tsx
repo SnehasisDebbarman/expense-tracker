@@ -1,4 +1,4 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -7,6 +7,7 @@ import { FAB, Provider as PaperProvider } from 'react-native-paper';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { HackerTheme } from '../constants/Colors';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -25,18 +26,19 @@ export default function RootLayout() {
   };
 
   return (
-    <PaperProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <PaperProvider theme={HackerTheme}>
+      <ThemeProvider value={HackerTheme}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
         </Stack>
-        <StatusBar style="auto" />
+        <StatusBar style="light" />
         <FAB
           icon="plus"
-          style={{ position: 'absolute', right: 24, bottom: 90, zIndex: 1000 }}
+          style={{ position: 'absolute', right: 24, bottom: 90, zIndex: 1000, backgroundColor: '#181818', borderColor: '#39ff14', borderWidth: 2 }}
           onPress={handleAddExpense}
           label="Add"
+          color="#39ff14"
         />
       </ThemeProvider>
     </PaperProvider>
