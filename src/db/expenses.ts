@@ -59,3 +59,8 @@ export async function updateExpense(expense: Expense) {
     [expense.date, expense.category, expense.amount, expense.notes, expense.id]
   );
 }
+
+export async function deleteAllExpenses() {
+  const db = await getDB();
+  await db.runAsync('DELETE FROM expenses');
+}

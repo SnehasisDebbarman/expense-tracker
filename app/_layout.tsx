@@ -6,11 +6,10 @@ import * as React from 'react';
 import { FAB, Provider as PaperProvider } from 'react-native-paper';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
-import { HackerTheme } from '../constants/Colors';
+import { ColorSchemeProvider, useColorScheme } from '@/hooks/useColorScheme';
+import { Colors, HackerTheme } from '../constants/Colors';
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+function AppContent() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
@@ -21,18 +20,21 @@ export default function RootLayout() {
     return null;
   }
 
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? HackerTheme : { ...HackerTheme, dark: false, colors: { ...Colors.light, ...HackerTheme.colors } };
+
   const handleAddExpense = () => {
     router.push('/add-expense');
   };
 
   return (
-    <PaperProvider theme={HackerTheme}>
-      <ThemeProvider value={HackerTheme}>
+    <PaperProvider theme={theme}>
+      <ThemeProvider value={theme}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
         </Stack>
-        <StatusBar style="light" />
+        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
         <FAB
           icon="plus"
           style={{ position: 'absolute', right: 24, bottom: 90, zIndex: 1000, backgroundColor: '#181818', borderColor: '#39ff14', borderWidth: 2 }}
@@ -42,5 +44,13 @@ export default function RootLayout() {
         />
       </ThemeProvider>
     </PaperProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ColorSchemeProvider>
+      <AppContent />
+    </ColorSchemeProvider>
   );
 }
